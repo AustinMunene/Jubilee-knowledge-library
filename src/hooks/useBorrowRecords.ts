@@ -10,8 +10,8 @@ export function useUserBorrows(userId?: string) {
         .select('*')
         .eq('user_id', userId)
         .order('issued_at', { ascending: false })
-      if (error) throw error
-      return data
+    if (error) throw error
+    return data
     },
     enabled: !!userId,
   })

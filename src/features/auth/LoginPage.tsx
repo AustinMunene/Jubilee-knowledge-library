@@ -148,7 +148,7 @@ export default function LoginPage() {
       if (result.error) {
         if (result.error.message.includes('Invalid login credentials') || result.error.message.includes('Email not confirmed')) {
           setError('Invalid email or password')
-        } else {
+      } else {
           setError(result.error.message)
         }
         setLoading(false)
@@ -194,7 +194,7 @@ export default function LoginPage() {
           </div>
 
           {/* Headline */}
-          <div className="space-y-6">
+    <div className="space-y-6">
             <h2 className="text-5xl font-bold text-white leading-tight">
               Discover the joy of{' '}
               <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
@@ -239,9 +239,9 @@ export default function LoginPage() {
                 ? 'Sign in to continue your reading journey'
                 : 'Start your journey with thousands of books'}
             </p>
-          </div>
+      </div>
 
-          {/* Form */}
+      {/* Form */}
           <form 
             onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} 
             className="space-y-5"
@@ -275,13 +275,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div>
+        <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Email <span className="text-red-400">*</span>
               </label>
-              <input
-                type="email"
-                value={email}
+          <input
+            type="email"
+            value={email}
                 onChange={e => {
                   setEmail(e.target.value)
                   if (validationErrors.email) {
@@ -294,12 +294,12 @@ export default function LoginPage() {
                     ? 'border-red-500'
                     : 'border-slate-700 focus:border-teal-500'
                 } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-colors`}
-                required
-              />
+            required
+          />
               {validationErrors.email && (
                 <p className="mt-1 text-sm text-red-400">{validationErrors.email}</p>
               )}
-            </div>
+        </div>
 
             {mode === 'signup' && (
               <div>
@@ -330,28 +330,28 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div>
+        <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Password <span className="text-red-400">*</span>
               </label>
               <div className="relative">
-                <input
+          <input
                   type={showPassword ? 'text' : 'password'}
-                  value={password}
+            value={password}
                   onChange={e => {
                     setPassword(e.target.value)
                     if (validationErrors.password) {
                       setValidationErrors({ ...validationErrors, password: undefined })
                     }
                   }}
-                  placeholder="••••••••"
+            placeholder="••••••••"
                   className={`w-full px-4 py-3 pr-12 rounded-lg bg-slate-900 border ${
                     validationErrors.password
                       ? 'border-red-500'
                       : 'border-slate-700 focus:border-teal-500'
                   } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-colors`}
-                  required
-                />
+            required
+          />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -401,20 +401,20 @@ export default function LoginPage() {
                   </div>
                 </div>
               )}
-            </div>
+        </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+        {error && (
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
 
-            <button
-              type="submit"
-              disabled={loading}
+        <button
+          type="submit"
+          disabled={loading}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading && <Loader className="w-4 h-4 animate-spin" />}
+        >
+          {loading && <Loader className="w-4 h-4 animate-spin" />}
               {loading
                 ? mode === 'signin'
                   ? 'Signing in...'
@@ -422,8 +422,8 @@ export default function LoginPage() {
                 : mode === 'signin'
                 ? 'Sign In'
                 : 'Create account'}
-            </button>
-          </form>
+        </button>
+      </form>
 
           {/* Toggle between sign in and sign up */}
           <div className="text-center">

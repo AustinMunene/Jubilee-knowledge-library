@@ -52,6 +52,28 @@ This creates two storage buckets:
 - `book-covers` - for book cover images (public read access)
 - `profile-photos` - for user profile photos (public read access)
 
+**4. Seed the database with sample books**
+
+Option A: Using SQL (Recommended)
+```bash
+# Copy and run the contents of db/seed_books.sql in Supabase SQL Editor
+# This will insert 5 real books into your library
+```
+
+Option B: Using TypeScript script
+```bash
+# First, add SUPABASE_SERVICE_ROLE_KEY to your .env file
+# Then run:
+npx tsx scripts/seedBooks.ts
+```
+
+The seed script will insert:
+1. Narrative and Numbers - Aswath Damodaran
+2. Value Investing: From Graham to Buffett and Beyond - Bruce Greenwald
+3. A Random Walk Down Wall Street - Burton Malkiel
+4. The Handbook of Fixed Income Securities - Frank J. Fabozzi
+5. The Venture Mindset - Ilya Strebulaev and Alex Dang
+
 **4. (Optional) Create a `.env` file in the `server/` folder for scheduled jobs**
 
 ```bash

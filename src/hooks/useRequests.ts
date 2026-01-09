@@ -24,6 +24,7 @@ export function useCreateRequest() {
     mutationFn: ({ user_id, book_id }: { user_id: string; book_id: string }) => createRequest(user_id, book_id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['requests'] })
+      qc.invalidateQueries({ queryKey: ['books'] })
     }
   })
 }

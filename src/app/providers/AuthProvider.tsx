@@ -274,8 +274,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   async function signOut() {
     try {
-      await supabase.auth.signOut()
-      setUser(null)
+    await supabase.auth.signOut()
+    setUser(null)
       setSession(null)
       // Clear all query cache
       queryClient.clear()
