@@ -78,6 +78,17 @@ create table if not exists admin_approval_requests (
   unique(user_id)
 );
 
+-- reviews: user reviews for books
+create table if not exists reviews (
+  id uuid primary key default gen_random_uuid(),
+  book_id uuid references books(id) on delete cascade,
+  user_id uuid references profiles(id) on delete cascade,
+  rating int not null check (rating >= 1 and rating <= 5),
+  comment text,
+  created_at timestamptz default now(),
+  unique(book_id, user_id)
+);
+
 -- Row Level Security examples
 -- Enable RLS on tables
 alter table profiles enable row level security;
@@ -85,6 +96,7 @@ alter table requests enable row level security;
 alter table borrow_records enable row level security;
 alter table books enable row level security;
 alter table admin_approval_requests enable row level security;
+alter table reviews enable row level security;
 
 -- Policies
 -- Profiles: users can read their own profile; admins can read all
@@ -195,6 +207,32 @@ create policy "admin_approval_update_admin" on admin_approval_requests
   using (is_admin())
   with check (is_admin());
 
+-- Reviews: users can read all, create/update their own; admins can do everything
+drop policy if exists "reviews_select_all" on reviews;
+drop policy if exists "reviews_insert_own" on reviews;
+drop policy if exists "reviews_update_own" on reviews;
+drop policy if exists "reviews_delete_own_or_admin" on reviews;
+
+create policy "reviews_select_all" on reviews
+  for select
+  using (true);
+
+create policy "reviews_insert_own" on reviews
+  for insert
+  with check (auth.uid() = user_id);
+
+create policy "reviews_update_own" on reviews
+  for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "reviews_delete_own_or_admin" on reviews
+  for delete
+  using (
+    (auth.uid() = user_id) OR 
+    is_admin()
+  );
+
 -- Sample seed data (admin user should be created via Supabase auth console)
 insert into books (title, author, category, isbn, total_copies, available_copies)
 values
@@ -207,11 +245,17 @@ returns boolean as $$
 declare
   user_role text;
 begin
+  -- Temporarily disable RLS for this query to avoid infinite recursion
+  set local row_security = off;
+  
   select role into user_role
   from profiles
   where id = auth.uid();
   
-  return user_role = 'admin';
+  -- Re-enable RLS
+  set local row_security = on;
+  
+  return coalesce(user_role, 'user') = 'admin';
 end;
 $$ language plpgsql security definer;
 

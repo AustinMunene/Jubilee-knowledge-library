@@ -19,7 +19,16 @@ import AdminApprovalPage from './features/admin/AdminApprovalPage'
 import SettingsPage from './features/profile/SettingsPage'
 
 export default function App() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-slate-400">Loading...</div>
+      </div>
+    )
+  }
 
   return (
     <Routes>

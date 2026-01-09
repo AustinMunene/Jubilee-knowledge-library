@@ -4,6 +4,10 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # Note: VITE_* environment variables must be set in Netlify Dashboard
+  # Go to Site settings → Environment variables and add:
+  # - VITE_SUPABASE_URL
+  # - VITE_SUPABASE_ANON_KEY
 
 # SPA routing - redirect all routes to index.html
 [[redirects]]

@@ -5,10 +5,25 @@ import BookForm from './BookForm'
 import BookEditForm from './BookEditForm'
 
 export default function AdminBooksPage() {
-  const { data: books, isLoading } = useQuery(['books_admin'], fetchBooks)
+  const { data: books, isLoading } = useQuery({
+    queryKey: ['books_admin'],
+    queryFn: fetchBooks,
+  })
   const qc = useQueryClient()
-  const delMut = useMutation((id: string) => deleteBook(id), { onSuccess: () => qc.invalidateQueries(['books_admin', 'books']) })
-  const bulkMut = useMutation((ids: string[]) => bulkDeleteBooks(ids), { onSuccess: () => qc.invalidateQueries(['books_admin', 'books']) })
+  const delMut = useMutation({
+    mutationFn: (id: string) => deleteBook(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['books_admin'] })
+      qc.invalidateQueries({ queryKey: ['books'] })
+    }
+  })
+  const bulkMut = useMutation({
+    mutationFn: (ids: string[]) => bulkDeleteBooks(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['books_admin'] })
+      qc.invalidateQueries({ queryKey: ['books'] })
+    }
+  })
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [editing, setEditing] = useState<any | null>(null)
 
@@ -59,7 +74,7 @@ export default function AdminBooksPage() {
       {editing && (
         <div className="mt-6 bg-white p-4 rounded shadow">
           <h4 className="font-semibold mb-2">Edit book</h4>
-          <BookEditForm book={editing} onSaved={(b) => { setEditing(null); qc.invalidateQueries(['books_admin']) }} />
+          <BookEditForm book={editing} onSaved={(b) => { setEditing(null); qc.invalidateQueries({ queryKey: ['books_admin'] }) }} />
         </div>
       )}
     </div>

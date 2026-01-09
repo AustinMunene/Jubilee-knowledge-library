@@ -1,29 +1,25 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { X, Star, ShoppingCart, Edit, Trash2, Loader } from 'lucide-react'
 import { useBook } from '../../hooks/useBooks'
 import { useAuth } from '../../app/providers/AuthProvider'
-import { createRequest } from '../../services/requests'
+import { useCreateRequest } from '../../hooks/useRequests'
 
 export default function BookDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { data: book, isLoading } = useBook(id)
-  const [isRequesting, setIsRequesting] = useState(false)
+  const createRequest = useCreateRequest()
 
   const handleRequest = async () => {
     if (!book || !user) return
     
-    setIsRequesting(true)
     try {
-      await createRequest(book.id, user.id)
-      alert('Request submitted successfully!')
+      await createRequest.mutateAsync({ user_id: user.id, book_id: book.id })
       navigate('/app/requests')
-    } catch (error) {
-      alert('Failed to submit request')
-    } finally {
-      setIsRequesting(false)
+    } catch (error: any) {
+      alert(error.message || 'Failed to submit request')
     }
   }
 
@@ -51,11 +47,20 @@ export default function BookDetailPage() {
           <div className="grid grid-cols-3 gap-6 mb-8">
             {/* Cover Image */}
             <div className="col-span-1">
-              <img
-                src={book.cover_url || 'https://via.placeholder.com/200x300'}
-                alt={book.title}
-                className="w-full rounded-lg shadow-lg object-cover aspect-[2/3]"
-              />
+              {book.cover_url ? (
+                <img
+                  src={book.cover_url}
+                  alt={book.title}
+                  className="w-full rounded-lg shadow-lg object-cover aspect-[2/3]"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              ) : (
+                <div className="w-full aspect-[2/3] rounded-lg shadow-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                  <ShoppingCart className="w-16 h-16 text-slate-600" />
+                </div>
+              )}
               <div className="mt-4 space-y-2">
                 <div className={`text-center py-2 rounded-lg font-semibold ${
                   isAvailable
@@ -126,10 +131,10 @@ export default function BookDetailPage() {
             {isAvailable && user?.role !== 'admin' && (
               <button
                 onClick={handleRequest}
-                disabled={isRequesting}
+                disabled={createRequest.isPending}
                 className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
               >
-                {isRequesting ? (
+                {createRequest.isPending ? (
                   <>
                     <Loader className="w-5 h-5 animate-spin" />
                     Requesting...

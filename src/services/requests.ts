@@ -14,7 +14,35 @@ export async function fetchUserRequests(userId: string) {
 }
 
 export async function createRequest(user_id: string, book_id: string) {
-  const { data, error } = await supabase.from('requests').insert({ user_id, book_id }).select().single()
+  // Check if book is available
+  const { data: book, error: bookError } = await supabase
+    .from('books')
+    .select('available_copies')
+    .eq('id', book_id)
+    .single()
+
+  if (bookError) throw new Error('Book not found')
+  if (book.available_copies < 1) throw new Error('Book is not available')
+
+  // Check if user already has a pending request for this book
+  const { data: existing } = await supabase
+    .from('requests')
+    .select('id')
+    .eq('user_id', user_id)
+    .eq('book_id', book_id)
+    .eq('status', 'pending')
+    .maybeSingle()
+
+  if (existing) {
+    throw new Error('You already have a pending request for this book')
+  }
+
+  const { data, error } = await supabase
+    .from('requests')
+    .insert({ user_id, book_id })
+    .select()
+    .single()
+  
   if (error) throw error
   return data
 }

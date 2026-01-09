@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { BookOpen, Loader, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react'
-import { supabase } from '../../services/supabaseClient'
+import { useAuth } from '../../app/providers/AuthProvider'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -24,9 +24,17 @@ export default function LoginPage() {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const navigate = useNavigate()
   const location = useLocation()
+  const { signIn, signUp, user, loading: authLoading } = useAuth()
   
   // Get the redirect location from state, or default to /app
   const from = (location.state as any)?.from?.pathname || '/app'
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate(from, { replace: true })
+    }
+  }, [user, authLoading, navigate, from])
 
   // Password validation rules
   const validatePassword = (pwd: string): string | null => {
@@ -82,92 +90,44 @@ export default function LoginPage() {
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault()
+    e.stopPropagation()
+    
     setError('')
     setValidationErrors({})
 
-    if (!validateForm()) return
+    // Validate form
+    if (!validateForm()) {
+      console.log('Validation failed', validationErrors)
+      return
+    }
 
     setLoading(true)
+    console.log('Starting sign up...', { email, username })
 
     try {
-      // Check if email already exists in profiles
-      const { data: existingEmail } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', email)
-        .maybeSingle()
-
-      if (existingEmail) {
-        setValidationErrors({ email: 'This email is already registered' })
-        setLoading(false)
-        return
-      }
-
-      // Check if username already exists
-      const { data: existingUsername } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', username)
-        .maybeSingle()
-
-      if (existingUsername) {
-        setValidationErrors({ username: 'This username is already taken' })
-        setLoading(false)
-        return
-      }
-
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
-      if (authError) {
-        if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
+      const result = await signUp(email, password, username, name)
+      console.log('Sign up result:', result)
+      
+      if (result.error) {
+        console.error('Sign up error:', result.error.message)
+        if (result.error.message.includes('already registered') || result.error.message.includes('User already registered')) {
           setValidationErrors({ email: 'This email is already registered' })
+        } else if (result.error.message.includes('Username already taken')) {
+          setValidationErrors({ username: 'This username is already taken' })
         } else {
-          setError(authError.message)
+          setError(result.error.message)
         }
         setLoading(false)
         return
       }
 
-      if (!authData.user) {
-        setError('Failed to create account. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      // Create profile
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: authData.user.id,
-        email,
-        username,
-        name,
-        role: 'user',
-      })
-
-      if (profileError) {
-        setError('Failed to create profile. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      // Sign in automatically after signup
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (signInError) {
-        setError('Account created but sign in failed. Please sign in manually.')
-        setMode('signin')
-        setLoading(false)
-        return
-      }
-
-      navigate(from, { replace: true })
+      // Success - wait a bit for auth state to update, then navigate
+      console.log('Sign up successful, navigating...')
+      setTimeout(() => {
+        navigate(from, { replace: true })
+      }, 100)
     } catch (err: any) {
+      console.error('Sign up exception:', err)
       setError(err.message || 'An error occurred during sign up')
       setLoading(false)
     }
@@ -183,21 +143,20 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password })
+      const result = await signIn(email, password)
       
-      if (err) {
-        if (err.message.includes('Invalid login credentials') || err.message.includes('Email not confirmed')) {
+      if (result.error) {
+        if (result.error.message.includes('Invalid login credentials') || result.error.message.includes('Email not confirmed')) {
           setError('Invalid email or password')
         } else {
-          setError(err.message)
+          setError(result.error.message)
         }
         setLoading(false)
         return
       }
 
-      if (data?.user) {
-        navigate(from, { replace: true })
-      }
+      // Success - navigation will happen via useEffect when user state updates
+      navigate(from, { replace: true })
     } catch (err: any) {
       setError(err.message || 'An error occurred')
       setLoading(false)
@@ -283,7 +242,11 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-5">
+          <form 
+            onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} 
+            className="space-y-5"
+            noValidate
+          >
             {mode === 'signup' && (
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">

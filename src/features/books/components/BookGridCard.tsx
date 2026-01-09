@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Star, ShoppingCart } from 'lucide-react'
 import type { Book } from '../../../types'
-import { createRequest } from '../../../services/requests'
+import { useCreateRequest } from '../../../hooks/useRequests'
 import { useAuth } from '../../../app/providers/AuthProvider'
 
 interface BookGridCardProps {
@@ -12,7 +12,7 @@ interface BookGridCardProps {
 export default function BookGridCard({ book }: BookGridCardProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [isRequesting, setIsRequesting] = React.useState(false)
+  const createRequest = useCreateRequest()
 
   const available = book.available_copies > 0
 
@@ -23,14 +23,12 @@ export default function BookGridCard({ book }: BookGridCardProps) {
       return
     }
 
-    setIsRequesting(true)
     try {
-      await createRequest(book.id, user.id)
-      alert('Book requested successfully!')
-    } catch (error) {
-      alert('Failed to request book')
-    } finally {
-      setIsRequesting(false)
+      await createRequest.mutateAsync({ user_id: user.id, book_id: book.id })
+      // Success feedback handled by mutation
+    } catch (error: any) {
+      // Error handled by mutation
+      console.error('Request failed:', error.message)
     }
   }
 
@@ -72,10 +70,10 @@ export default function BookGridCard({ book }: BookGridCardProps) {
             {available && user?.role !== 'admin' && (
               <button 
                 onClick={handleRequest}
-                disabled={isRequesting}
+                disabled={createRequest.isPending}
                 className="w-full px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
               >
-                {isRequesting ? 'Requesting...' : 'Request'}
+                {createRequest.isPending ? 'Requesting...' : 'Request'}
               </button>
             )}
             <button 

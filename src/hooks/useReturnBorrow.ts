@@ -3,10 +3,11 @@ import { returnBorrow } from '../services/borrow'
 
 export function useReturnBorrow() {
   const qc = useQueryClient()
-  return useMutation((id: string) => returnBorrow(id), {
-    onSuccess() {
-      qc.invalidateQueries(['borrows'])
-      qc.invalidateQueries(['books'])
+  return useMutation({
+    mutationFn: (id: string) => returnBorrow(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['borrows'] })
+      qc.invalidateQueries({ queryKey: ['books'] })
     }
   })
 }

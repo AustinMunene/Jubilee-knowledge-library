@@ -1,29 +1,167 @@
 import React from 'react'
 import { useAdminRequests, useUpdateRequestStatus } from '../../hooks/useRequests'
+import { Loader, CheckCircle, XCircle, User, Mail, BookOpen } from 'lucide-react'
+import { Skeleton } from '../../components/Skeleton'
+import { EmptyState } from '../../components/EmptyState'
+import { useBooks } from '../../hooks/useBooks'
 
 export default function AdminRequestsPage() {
-  const { data: requests, isLoading } = useAdminRequests()
-  const mutation = useUpdateRequestStatus()
+  const { data: requests, isLoading, error } = useAdminRequests()
+  const { data: books } = useBooks()
+  const updateMutation = useUpdateRequestStatus()
 
-  if (isLoading) return <div>Loading...</div>
+  const getBookTitle = (bookId: string) => {
+    const book = books?.find(b => b.id === bookId)
+    return book?.title || `Book ${bookId.slice(0, 8)}...`
+  }
+
+  const handleApprove = async (requestId: string) => {
+    if (confirm('Approve this book request?')) {
+      try {
+        await updateMutation.mutateAsync({ id: requestId, status: 'approved' })
+      } catch (err: any) {
+        alert(err.message || 'Failed to approve request')
+      }
+    }
+  }
+
+  const handleReject = async (requestId: string) => {
+    if (confirm('Reject this book request?')) {
+      try {
+        await updateMutation.mutateAsync({ id: requestId, status: 'rejected' })
+      } catch (err: any) {
+        alert(err.message || 'Failed to reject request')
+      }
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 rounded-lg bg-red-500/10 border border-red-500/20">
+        <p className="text-red-400">Error loading requests. Please try again.</p>
+      </div>
+    )
+  }
+
+  const pendingRequests = requests?.filter((r: any) => r.status === 'pending') || []
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Pending Requests</h2>
-      <div className="space-y-3">
-        {requests?.map((r: any) => (
-          <div key={r.id} className="bg-white p-3 rounded shadow flex items-center justify-between">
-            <div>
-              <div className="font-medium">User: {r.user_id}</div>
-              <div className="text-sm text-gray-500">Book: {r.book_id}</div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => mutation.mutate({ id: r.id, status: 'approved' })} className="px-3 py-1 bg-green-600 text-white rounded">Approve</button>
-              <button onClick={() => mutation.mutate({ id: r.id, status: 'rejected' })} className="px-3 py-1 bg-red-600 text-white rounded">Reject</button>
-            </div>
-          </div>
-        ))}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-white">Pending Requests</h1>
+        <p className="text-slate-400 mt-1">Review and approve book requests</p>
       </div>
+
+      {pendingRequests.length === 0 ? (
+        <EmptyState
+          icon={CheckCircle}
+          title="No pending requests"
+          description="All requests have been processed"
+        />
+      ) : (
+        <div className="space-y-4">
+          {pendingRequests.map((request: any) => {
+            const user = request.profiles as any
+
+            return (
+              <div
+                key={request.id}
+                className="p-6 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-slate-600 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4 flex-1">
+                    {/* User Avatar */}
+                    <div className="w-12 h-12 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-medium">
+                      {user?.profile_photo_url ? (
+                        <img
+                          src={user.profile_photo_url}
+                          alt={user.name || user.username || 'User'}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <User className="w-6 h-6" />
+                      )}
+                    </div>
+
+                    {/* Request Info */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-semibold text-white">
+                          {getBookTitle(request.book_id)}
+                        </h3>
+                      </div>
+                      <div className="space-y-1">
+                        {user && (
+                          <>
+                            <div className="flex items-center gap-2 text-sm text-slate-400">
+                              <User className="w-4 h-4" />
+                              {user.name || user.username || 'Unknown User'}
+                              {user.username && <span className="text-slate-500">@{user.username}</span>}
+                            </div>
+                            {user.email && (
+                              <div className="flex items-center gap-2 text-sm text-slate-400">
+                                <Mail className="w-4 h-4" />
+                                {user.email}
+                              </div>
+                            )}
+                          </>
+                        )}
+                        <div className="text-xs text-slate-500 mt-2">
+                          Requested: {new Date(request.requested_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleApprove(request.id)}
+                      disabled={updateMutation.isPending}
+                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateMutation.isPending ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4" />
+                      )}
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleReject(request.id)}
+                      disabled={updateMutation.isPending}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateMutation.isPending ? (
+                        <Loader className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

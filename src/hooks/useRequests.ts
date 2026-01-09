@@ -4,23 +4,37 @@ import { useAuth } from '../app/providers/AuthProvider'
 
 export function useUserRequests() {
   const { user } = useAuth()
-  return useQuery(['requests', user?.id], () => fetchUserRequests(user!.id), { enabled: !!user })
+  return useQuery({
+    queryKey: ['requests', user?.id],
+    queryFn: () => fetchUserRequests(user!.id),
+    enabled: !!user,
+  })
 }
 
 export function useAdminRequests() {
-  return useQuery(['admin_requests'], fetchRequestsForAdmin)
+  return useQuery({
+    queryKey: ['admin_requests'],
+    queryFn: fetchRequestsForAdmin,
+  })
 }
 
 export function useCreateRequest() {
   const qc = useQueryClient()
-  return useMutation(({ user_id, book_id }: { user_id: string; book_id: string }) => createRequest(user_id, book_id), {
-    onSuccess() { qc.invalidateQueries(['requests']) }
+  return useMutation({
+    mutationFn: ({ user_id, book_id }: { user_id: string; book_id: string }) => createRequest(user_id, book_id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['requests'] })
+    }
   })
 }
 
 export function useUpdateRequestStatus() {
   const qc = useQueryClient()
-  return useMutation(({ id, status }: { id: string; status: 'approved' | 'rejected' }) => updateRequestStatus(id, status), {
-    onSuccess() { qc.invalidateQueries(['admin_requests']); qc.invalidateQueries(['requests']) }
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'approved' | 'rejected' }) => updateRequestStatus(id, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin_requests'] })
+      qc.invalidateQueries({ queryKey: ['requests'] })
+    }
   })
 }
