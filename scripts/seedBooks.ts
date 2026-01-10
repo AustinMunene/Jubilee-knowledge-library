@@ -64,7 +64,7 @@ const books = [
     description: 'A classic investment guide that explains why a diversified portfolio of index funds is the most reliable path to long-term wealth. Malkiel debunks market timing and stock picking myths while providing evidence-based strategies for individual investors.',
     total_copies: 3,
     available_copies: 3,
-    cover_url: null,
+    cover_url: "https://dczebbdgvogvoiphjycx.supabase.co/storage/v1/object/sign/images/A%20random%20walk%20down%20wallstreet.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV83ZDhmYjNlYS0wZDc2LTQ4NjktODk5OC1hYzZkODhiZDYyNzYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvQSByYW5kb20gd2FsayBkb3duIHdhbGxzdHJlZXQuanBnIiwiaWF0IjoxNzY4MDcxNDgyLCJleHAiOjIwODM0MzE0ODJ9.yvccvZc-lv8XSriAvSwynqwol7mVSeDoodRqCv99EE0",
   },
   {
     title: 'The Handbook of Fixed Income Securities',

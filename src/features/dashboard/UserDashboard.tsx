@@ -3,27 +3,13 @@ import { Clock, CheckCircle, AlertCircle, BookMarked } from 'lucide-react'
 import { useAuth } from '../../app/providers/AuthProvider'
 import { useUserBorrows } from '../../hooks/useBorrowRecords'
 import { useReturnBorrow } from '../../hooks/useReturnBorrow'
-import { useBooks } from '../../hooks/useBooks'
 import { SkeletonGrid } from '../../components/Skeleton'
 import { EmptyState } from '../../components/EmptyState'
 
 export default function UserDashboard() {
   const { user } = useAuth()
   const { data: borrows, isLoading } = useUserBorrows(user?.id)
-  const { data: books } = useBooks()
   const ret = useReturnBorrow()
-
-  const getBookTitle = (bookId: string) => {
-    const book = books?.find(b => b.id === bookId)
-    return book?.title || `Book ${bookId.slice(0, 8)}...`
-  }
-
-  const getDaysBorrowed = (issuedAt: string) => {
-    const issued = new Date(issuedAt)
-    const now = new Date()
-    const diffTime = now.getTime() - issued.getTime()
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24))
-  }
 
   if (!user) return <div className="text-center py-12 text-slate-400">Please sign in to view your dashboard</div>
 
@@ -120,12 +106,8 @@ export default function UserDashboard() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="font-semibold text-white">{getBookTitle(b.book_id)}</p>
-                    <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
-                      <div>
-                        <p className="text-slate-500 text-xs uppercase tracking-wide">Days Borrowed</p>
-                        <p className="text-slate-200">{getDaysBorrowed(b.issued_at)}</p>
-                      </div>
+                    <p className="font-semibold text-white">Book #{b.book_id}</p>
+                    <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
                       <div>
                         <p className="text-slate-500 text-xs uppercase tracking-wide">Issued</p>
                         <p className="text-slate-200">{new Date(b.issued_at).toLocaleDateString()}</p>
@@ -176,7 +158,7 @@ export default function UserDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <AlertCircle className="w-5 h-5 text-red-400" />
-                      <p className="font-semibold text-white">{getBookTitle(b.book_id)}</p>
+                      <p className="font-semibold text-white">Book #{b.book_id}</p>
                     </div>
                     <p className="text-red-400 text-sm mt-2">
                       Due: {new Date(b.due_at).toLocaleDateString()}

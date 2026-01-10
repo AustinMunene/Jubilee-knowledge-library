@@ -85,41 +85,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (mounted && !loadingResolved) {
         loadingResolved = true
         setLoading(false)
+        // Loading resolved
       }
     }
 
-    // Check initial session with error handling
-    supabase.auth.getSession()
-      .then(({ data: { session }, error }) => {
-        if (!mounted) return
-        
-        if (error) {
-          console.error('Error getting session:', error.message)
-          resolveLoading()
-          return
-        }
-        
-        setSession(session)
-        if (session?.user) {
-          // Load profile but don't wait for it to resolve loading
-          // This prevents hanging if profile fetch fails
-          loadUserProfile(session.user.id)
-            .catch((err) => {
-              console.error('Error loading profile:', err)
-            })
-            .finally(() => {
-              resolveLoading()
-            })
-        } else {
-          resolveLoading()
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to get session:', err)
+    // Set a safety timeout to ensure we never hang forever
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && !loadingResolved) {
+        console.warn('Auth loading timeout - forcing resolution')
         resolveLoading()
-      })
+      }
+    }, 1500) // 1.5 second safety timeout
 
-    // Listen for auth state changes
+    // Listen for auth state changes - this is the primary mechanism
+    // It fires immediately with the current session
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -131,7 +110,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await loadUserProfile(session.user.id)
         } catch (err) {
-          console.error('Error loading profile in auth change:', err)
+          console.error('❌ Error loading profile in auth change:', err)
+          // Set a basic user object even if profile fetch fails
+          setUser({
+            id: session.user.id,
+            email: session.user.email || undefined,
+            role: 'user',
+          })
         }
       } else {
         setUser(null)
@@ -139,22 +124,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         queryClient.clear()
       }
       
-      // Resolve loading on auth state change if not already resolved
+      // Resolve loading as soon as we know the auth state
       resolveLoading()
     })
 
-    // Fallback timeout to ensure loading never hangs forever
-    const timeout = setTimeout(() => {
-      if (mounted && !loadingResolved) {
-        console.warn('Auth loading timeout - forcing loading to false')
-        resolveLoading()
-      }
-    }, 3000) // 3 second timeout
+    // Also check initial session as a backup (non-blocking)
+    // But don't wait for it - onAuthStateChange should fire first
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (!mounted || loadingResolved) return
+        
+        if (error) {
+          console.warn('⚠️ Error getting session (non-critical):', error.message)
+          return
+        }
+        
+        // Only update if we haven't already resolved and session exists
+        if (session?.user) {
+          setSession(session)
+          // Load profile in background
+          loadUserProfile(session.user.id).catch((err) => {
+            console.error('❌ Error loading profile from getSession:', err)
+          })
+        }
+      })
+      .catch((err) => {
+        if (!mounted || loadingResolved) return
+        console.warn('⚠️ getSession promise error (non-critical):', err)
+      })
 
     return () => {
       mounted = false
       subscription.unsubscribe()
-      clearTimeout(timeout)
+      clearTimeout(safetyTimeout)
     }
   }, [queryClient])
 
@@ -163,42 +165,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       
       if (error) {
+        // Provide user-friendly error messages
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: new Error('Invalid email or password') }
+        }
+        if (error.message.includes('Email not confirmed')) {
+          return { error: new Error('Please check your email to confirm your account') }
+        }
         return { error: new Error(error.message) }
       }
 
-      if (data?.session) {
-        setSession(data.session)
-        if (data.user) {
-          await loadUserProfile(data.user.id)
-        }
+      if (!data?.session) {
+        return { error: new Error('Sign in failed: No session returned') }
+      }
+
+      // Set session immediately
+      setSession(data.session)
+      
+      // Load user profile
+      if (data.user) {
+        await loadUserProfile(data.user.id)
       }
 
       return {}
     } catch (err: any) {
+      console.error('Sign in exception:', err)
       return { error: new Error(err.message || 'Sign in failed') }
     }
   }
 
   async function signUp(email: string, password: string, username: string, name?: string) {
-    console.log('signUp called with:', { email, username, hasPassword: !!password })
-    
     try {
-      // Skip username check for now if it's causing issues - we'll rely on DB constraint
-      // The database unique constraint will catch duplicates anyway
-      console.log('Skipping username check, proceeding to create auth user...')
-
-      // Create auth user first
-      console.log('Creating auth user...')
+      // Step 1: Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
       })
 
-      console.log('Auth signup response:', { hasUser: !!authData?.user, hasSession: !!authData?.session, error: authError?.message })
-
       if (authError) {
-        console.error('Auth signup error:', authError)
-        // Check if it's a username/email conflict
         if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
           return { error: new Error('This email is already registered') }
         }
@@ -206,12 +210,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (!authData.user) {
-        console.error('No user returned from signup')
         return { error: new Error('Failed to create account') }
       }
 
-      // Create profile - DB constraint will catch duplicate username
-      console.log('Creating profile...')
+      // Step 2: Create profile (using the user ID from signup)
       const { error: profileError } = await supabase.from('profiles').insert({
         id: authData.user.id,
         email,
@@ -221,44 +223,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
 
       if (profileError) {
-        console.error('Profile creation error:', profileError)
-        // Check if it's a duplicate username
+        // Handle duplicate username
         if (profileError.code === '23505' || profileError.message.includes('unique') || profileError.message.includes('duplicate')) {
           return { error: new Error('Username already taken') }
         }
         return { error: new Error(`Failed to create profile: ${profileError.message}`) }
       }
 
-      console.log('Profile created successfully')
-
-      // Auto sign in after signup - wait for session
+      // Step 3: Handle session - Supabase signUp may not return session if email confirmation is required
+      // Always try to sign in after successful signup to ensure we have a session
       if (authData.session) {
-        console.log('Session available, setting session...')
+        // Session was returned immediately - use it
+        // The onAuthStateChange listener will also fire, but we set it explicitly here to ensure immediate state update
         setSession(authData.session)
-        await loadUserProfile(authData.user.id)
+        // Load profile - it should exist since we just created it
+        // If it fails, the listener will handle fallback
+        try {
+          await loadUserProfile(authData.user.id)
+        } catch (err) {
+          console.warn('Profile load failed on initial signup, will retry via auth listener:', err)
+          // Continue anyway - onAuthStateChange will handle retry
+        }
+        return {}
       } else {
-        // If no session immediately, sign in with password
-        console.log('No session, attempting sign in...')
+        // No session returned - explicitly sign in to get one
+        // This handles cases where email confirmation is disabled but session still not returned
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         
         if (signInError) {
-          console.error('Auto sign-in error:', signInError)
-          // Profile was created, but sign-in failed - user can sign in manually
-          return { error: new Error('Account created but auto sign-in failed. Please sign in manually.') }
+          // Check if it's an email confirmation error
+          if (signInError.message.includes('Email not confirmed') || signInError.message.includes('confirm') || signInError.message.includes('not verified')) {
+            return { error: new Error('Please check your email to confirm your account. You can sign in after confirmation.') }
+          }
+          // Account created but sign-in failed - return helpful message
+          return { error: new Error('Account created successfully. Please sign in manually with your email and password.') }
         }
         
         if (signInData?.session) {
-          console.log('Sign in successful, setting session...')
+          // Set session explicitly - onAuthStateChange will also fire
           setSession(signInData.session)
-          await loadUserProfile(signInData.user.id)
+          try {
+            await loadUserProfile(signInData.user.id)
+          } catch (err) {
+            console.warn('Profile load failed after sign-in, will retry via auth listener:', err)
+            // Continue anyway - onAuthStateChange will handle retry
+          }
+          return {}
         }
+        
+        // If we get here, something went wrong
+        return { error: new Error('Account created but session could not be established. Please sign in manually.') }
       }
-
-      console.log('Sign up completed successfully')
-      return {}
     } catch (err: any) {
       console.error('Sign up exception:', err)
       return { error: new Error(err.message || 'Sign up failed') }

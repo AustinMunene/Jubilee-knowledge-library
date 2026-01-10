@@ -103,9 +103,17 @@ export default function App() {
         path="/app/settings"
       />
 
-      {/* Redirect root */}
-      <Route path="/" element={<Navigate to="/app" replace />} />
-      <Route path="*" element={<Navigate to="/app" replace />} />
+      {/* Redirect root - send to login if not authenticated, otherwise to app */}
+      <Route 
+        path="/" 
+        element={user ? <Navigate to="/app" replace /> : <Navigate to="/login" replace />} 
+      />
+      
+      {/* Catch-all - redirect unauthenticated users to login */}
+      <Route 
+        path="*" 
+        element={user ? <Navigate to="/app" replace /> : <Navigate to="/login" replace />} 
+      />
     </Routes>
   )
 }

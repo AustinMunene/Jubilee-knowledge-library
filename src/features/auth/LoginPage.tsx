@@ -32,7 +32,11 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
-      navigate(from, { replace: true })
+      // Small delay to ensure state is fully updated
+      const timer = setTimeout(() => {
+        navigate(from, { replace: true })
+      }, 100)
+      return () => clearTimeout(timer)
     }
   }, [user, authLoading, navigate, from])
 
@@ -97,37 +101,35 @@ export default function LoginPage() {
 
     // Validate form
     if (!validateForm()) {
-      console.log('Validation failed', validationErrors)
       return
     }
 
     setLoading(true)
-    console.log('Starting sign up...', { email, username })
 
     try {
       const result = await signUp(email, password, username, name)
-      console.log('Sign up result:', result)
       
       if (result.error) {
-        console.error('Sign up error:', result.error.message)
-        if (result.error.message.includes('already registered') || result.error.message.includes('User already registered')) {
+        const errorMsg = result.error.message
+        if (errorMsg.includes('already registered') || errorMsg.includes('User already registered')) {
           setValidationErrors({ email: 'This email is already registered' })
-        } else if (result.error.message.includes('Username already taken')) {
+        } else if (errorMsg.includes('Username already taken')) {
           setValidationErrors({ username: 'This username is already taken' })
+        } else if (errorMsg.includes('sign in manually')) {
+          // Account created but couldn't auto sign-in - show success message
+          setError('Account created successfully! Please sign in below.')
+          setMode('signin')
         } else {
-          setError(result.error.message)
+          setError(errorMsg)
         }
         setLoading(false)
         return
       }
 
-      // Success - wait a bit for auth state to update, then navigate
-      console.log('Sign up successful, navigating...')
-      setTimeout(() => {
-        navigate(from, { replace: true })
-      }, 100)
+      // Success - don't navigate here, let the useEffect handle it when user state updates
+      // This ensures the auth state is properly set before navigation
+      setLoading(false)
     } catch (err: any) {
-      console.error('Sign up exception:', err)
       setError(err.message || 'An error occurred during sign up')
       setLoading(false)
     }
@@ -138,7 +140,9 @@ export default function LoginPage() {
     setError('')
     setValidationErrors({})
 
-    if (!validateForm()) return
+    if (!validateForm()) {
+      return
+    }
 
     setLoading(true)
 
@@ -146,17 +150,13 @@ export default function LoginPage() {
       const result = await signIn(email, password)
       
       if (result.error) {
-        if (result.error.message.includes('Invalid login credentials') || result.error.message.includes('Email not confirmed')) {
-          setError('Invalid email or password')
-      } else {
-          setError(result.error.message)
-        }
+        setError(result.error.message)
         setLoading(false)
         return
       }
 
       // Success - navigation will happen via useEffect when user state updates
-      navigate(from, { replace: true })
+      // Don't set loading to false here - let it stay true until navigation completes
     } catch (err: any) {
       setError(err.message || 'An error occurred')
       setLoading(false)
