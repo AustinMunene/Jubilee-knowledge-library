@@ -58,7 +58,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: authUser, error: authError } = await supabase.auth.getUser()
       if (authError) {
         console.error('Error getting auth user:', authError.message)
-        setUser(null)
+        // Still set a basic user to allow login to proceed
+        setUser({
+          id: authUserId,
+          role: 'user',
+        })
         return
       }
       
@@ -69,11 +73,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: 'user',
         })
       } else {
-        setUser(null)
+        // Set basic user to allow login to proceed even without profile
+        setUser({
+          id: authUserId,
+          role: 'user',
+        })
       }
     } catch (err: any) {
       console.error('Failed to load user profile:', err?.message || err)
-      setUser(null)
+      // Set a basic user to allow login to proceed even if profile fetch fails
+      // This prevents login from hanging when profiles endpoint has issues
+      setUser({
+        id: authUserId,
+        role: 'user',
+      })
     }
   }
 
@@ -112,6 +125,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (err) {
           console.error('❌ Error loading profile in auth change:', err)
           // Set a basic user object even if profile fetch fails
+          // This ensures login can proceed even if profiles endpoint has issues
           setUser({
             id: session.user.id,
             email: session.user.email || undefined,
@@ -124,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         queryClient.clear()
       }
       
-      // Resolve loading as soon as we know the auth state
+      // Always resolve loading - even if profile load failed, we have a basic user
       resolveLoading()
     })
 
@@ -179,12 +193,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: new Error('Sign in failed: No session returned') }
       }
 
-      // Set session immediately
+      // Set session immediately - this will trigger onAuthStateChange
+      // which will handle profile loading asynchronously
       setSession(data.session)
       
-      // Load user profile
+      // Set a basic user immediately to allow login to proceed
+      // onAuthStateChange will update with full profile when it loads
       if (data.user) {
-        await loadUserProfile(data.user.id)
+        setUser({
+          id: data.user.id,
+          email: data.user.email || undefined,
+          role: 'user',
+        })
+        // Load profile in background - don't await to prevent blocking
+        loadUserProfile(data.user.id).catch((err) => {
+          console.warn('Profile load failed in signIn, onAuthStateChange will handle it:', err)
+        })
       }
 
       return {}
