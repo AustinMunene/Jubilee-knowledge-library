@@ -92,7 +92,7 @@ export default function AdminDashboard() {
         {cards.map((card, idx) => {
           const Icon = card.icon
           const colorClasses = {
-            indigo: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+            indigo: 'bg-red-600/10 border-red-500/20 text-red-400',
             emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
             blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
             red: 'bg-red-500/10 border-red-500/20 text-red-400',
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
             <p className="text-slate-400 text-sm">Manage and approve pending book requests</p>
             <Link
               to="/app/admin/requests"
-              className="block w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors text-center"
+              className="block w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-center"
             >
               View Requests
             </Link>
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
             <p className="text-slate-400 text-sm">Add, edit, or remove books from the library</p>
             <Link
               to="/app/admin/books"
-              className="block w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors text-center"
+              className="block w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-center"
             >
               Manage Books
             </Link>
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
             </p>
             <Link
               to="/app/admin/approvals"
-              className="block w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors text-center"
+              className="block w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors text-center"
             >
               View Approvals
             </Link>

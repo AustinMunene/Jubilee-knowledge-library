@@ -40,7 +40,7 @@ export default function BookGridCard({ book }: BookGridCardProps) {
 
   return (
     <div 
-      className="group cursor-pointer rounded-xl overflow-hidden bg-slate-800/50 border border-slate-700 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10"
+                className="group cursor-pointer rounded-xl overflow-hidden bg-slate-800/50 border border-slate-700 hover:border-red-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10"
     >
       {/* Cover Image */}
       <div className="relative h-64 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 overflow-hidden">
@@ -55,8 +55,8 @@ export default function BookGridCard({ book }: BookGridCardProps) {
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-6">
-            <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-3 border border-indigo-500/30">
-              <BookOpen className="w-10 h-10 text-indigo-400" />
+            <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center mb-3 border border-red-500/30">
+              <BookOpen className="w-10 h-10 text-red-400" />
             </div>
             <p className="text-xs text-slate-500 text-center font-medium">No Cover</p>
           </div>
@@ -91,7 +91,7 @@ export default function BookGridCard({ book }: BookGridCardProps) {
               <button 
                 onClick={handleRequest}
                 disabled={createRequest.isPending}
-                className="w-full px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg hover:shadow-indigo-500/50"
+                className="w-full px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-lg hover:shadow-red-500/50"
               >
                 {createRequest.isPending ? 'Requesting...' : 'Request Book'}
               </button>
@@ -110,7 +110,7 @@ export default function BookGridCard({ book }: BookGridCardProps) {
       {/* Info */}
       <div className="p-5 space-y-3">
         <div>
-          <h3 className="font-bold text-white line-clamp-2 group-hover:text-indigo-400 transition-colors text-lg leading-tight mb-1">
+          <h3 className="font-bold text-white line-clamp-2 group-hover:text-red-400 transition-colors text-lg leading-tight mb-1">
             {book.title}
           </h3>
           <p className="text-sm text-slate-400">{book.author}</p>

@@ -143,7 +143,7 @@ export default function SettingsPage() {
                 className="w-24 h-24 rounded-lg object-cover border-2 border-slate-700"
               />
             ) : (
-              <div className="w-24 h-24 rounded-lg bg-indigo-600 flex items-center justify-center border-2 border-slate-700">
+              <div className="w-24 h-24 rounded-lg bg-red-600 flex items-center justify-center border-2 border-slate-700">
                 <User className="w-12 h-12 text-white" />
               </div>
             )}
@@ -176,7 +176,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={handleUploadPhoto}
                 disabled={updateMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {updateMutation.isPending && <Loader className="w-4 h-4 animate-spin" />}
                 Save Photo
@@ -215,7 +215,7 @@ export default function SettingsPage() {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="John Doe"
-              className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
             />
           </div>
 
@@ -230,7 +230,7 @@ export default function SettingsPage() {
               value={username}
               onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
               placeholder="johndoe"
-              className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
             />
             <p className="text-xs text-slate-500 mt-1">Only letters, numbers, and underscores</p>
           </div>
@@ -261,7 +261,7 @@ export default function SettingsPage() {
               value={department}
               onChange={e => setDepartment(e.target.value)}
               placeholder="Engineering"
-              className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              className="w-full px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
             />
           </div>
         </div>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                   <button
                     onClick={() => createAdminRequestMutation.mutate()}
                     disabled={createAdminRequestMutation.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     {createAdminRequestMutation.isPending && <Loader className="w-4 h-4 animate-spin" />}
                     {createAdminRequestMutation.isPending ? 'Requesting...' : 'Request Admin Access'}
@@ -319,7 +319,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={updateMutation.isPending}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updateMutation.isPending && <Loader className="w-4 h-4 animate-spin" />}
             {updateMutation.isPending ? 'Saving...' : 'Save Changes'}

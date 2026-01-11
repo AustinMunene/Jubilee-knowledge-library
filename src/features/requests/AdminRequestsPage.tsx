@@ -1,14 +1,16 @@
 import React from 'react'
 import { useAdminRequests, useUpdateRequestStatus } from '../../hooks/useRequests'
-import { Loader, CheckCircle, XCircle, User, Mail, BookOpen } from 'lucide-react'
+import { Loader, CheckCircle, XCircle, User, Mail } from 'lucide-react'
 import { Skeleton } from '../../components/Skeleton'
 import { EmptyState } from '../../components/EmptyState'
 import { useBooks } from '../../hooks/useBooks'
+import { useToast } from '../../components/Toast'
 
 export default function AdminRequestsPage() {
   const { data: requests, isLoading, error } = useAdminRequests()
   const { data: books } = useBooks()
   const updateMutation = useUpdateRequestStatus()
+  const { showToast } = useToast()
 
   const getBookTitle = (bookId: string) => {
     const book = books?.find(b => b.id === bookId)
@@ -19,8 +21,9 @@ export default function AdminRequestsPage() {
     if (confirm('Approve this book request?')) {
       try {
         await updateMutation.mutateAsync({ id: requestId, status: 'approved' })
+        showToast('Request approved successfully', 'success')
       } catch (err: any) {
-        alert(err.message || 'Failed to approve request')
+        showToast(err.message || 'Failed to approve request', 'error')
       }
     }
   }
@@ -29,8 +32,9 @@ export default function AdminRequestsPage() {
     if (confirm('Reject this book request?')) {
       try {
         await updateMutation.mutateAsync({ id: requestId, status: 'rejected' })
+        showToast('Request rejected', 'success')
       } catch (err: any) {
-        alert(err.message || 'Failed to reject request')
+        showToast(err.message || 'Failed to reject request', 'error')
       }
     }
   }
@@ -64,7 +68,7 @@ export default function AdminRequestsPage() {
 
       {pendingRequests.length === 0 ? (
         <EmptyState
-          icon={CheckCircle}
+          icon={<CheckCircle className="w-8 h-8 text-slate-400" />}
           title="No pending requests"
           description="All requests have been processed"
         />
@@ -81,7 +85,7 @@ export default function AdminRequestsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
                     {/* User Avatar */}
-                    <div className="w-12 h-12 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-medium">
+                    <div className="w-12 h-12 rounded-lg bg-red-600 flex items-center justify-center text-white font-medium">
                       {user?.profile_photo_url ? (
                         <img
                           src={user.profile_photo_url}

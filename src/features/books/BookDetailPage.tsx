@@ -34,7 +34,7 @@ export default function BookDetailPage() {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-slate-900 rounded-xl p-8 border border-slate-700">
-          <Loader className="w-8 h-8 animate-spin text-indigo-400 mx-auto" />
+          <Loader className="w-8 h-8 animate-spin text-red-400 mx-auto" />
           <p className="text-slate-400 mt-4 text-center">Loading book details...</p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export default function BookDetailPage() {
           <p className="text-red-400 text-center mb-4">Book not found</p>
           <button
             onClick={handleClose}
-            className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           >
             Go Back
           </button>
@@ -94,8 +94,8 @@ export default function BookDetailPage() {
                     />
                   ) : (
                     <div className="w-full aspect-[2/3] rounded-xl shadow-2xl bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 flex flex-col items-center justify-center p-8 border border-slate-700/50">
-                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center mb-4 border border-indigo-500/30">
-                        <BookOpen className="w-12 h-12 text-indigo-400" />
+                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/20 flex items-center justify-center mb-4 border border-red-500/30">
+                        <BookOpen className="w-12 h-12 text-red-400" />
                       </div>
                       <p className="text-sm text-slate-500 font-medium">No Cover Available</p>
                     </div>
@@ -125,7 +125,7 @@ export default function BookDetailPage() {
               <div className="lg:col-span-2 space-y-6">
                 <div>
                   <h1 className="text-4xl font-bold text-white mb-3 leading-tight">{book.title}</h1>
-                  <p className="text-xl text-indigo-400 font-medium mb-4">{book.author}</p>
+                  <p className="text-xl text-red-400 font-medium mb-4">{book.author}</p>
 
                   {/* Rating */}
                   <div className="flex items-center gap-3 mb-6">
@@ -149,7 +149,7 @@ export default function BookDetailPage() {
                 <div className="grid grid-cols-2 gap-4 p-6 bg-slate-800/50 rounded-xl border border-slate-700/50">
                   {book.category && (
                     <div className="flex items-start gap-3">
-                      <Tag className="w-5 h-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                      <Tag className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Category</p>
                         <p className="text-white font-semibold">{book.category}</p>
@@ -158,7 +158,7 @@ export default function BookDetailPage() {
                   )}
                   {book.isbn && (
                     <div className="flex items-start gap-3">
-                      <Hash className="w-5 h-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                      <Hash className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">ISBN</p>
                         <p className="text-white font-semibold">{book.isbn}</p>
@@ -166,7 +166,7 @@ export default function BookDetailPage() {
                     </div>
                   )}
                   <div className="flex items-start gap-3">
-                    <BookOpen className="w-5 h-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                    <BookOpen className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Total Copies</p>
                       <p className="text-white font-semibold">{book.total_copies}</p>
@@ -174,7 +174,7 @@ export default function BookDetailPage() {
                   </div>
                   {book.created_at && (
                     <div className="flex items-start gap-3">
-                      <Calendar className="w-5 h-5 text-indigo-400 mt-0.5 flex-shrink-0" />
+                      <Calendar className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-slate-500 text-xs uppercase tracking-wide mb-1">Added</p>
                         <p className="text-white font-semibold">
@@ -213,7 +213,7 @@ export default function BookDetailPage() {
                 <button
                   onClick={handleRequest}
                   disabled={createRequest.isPending}
-                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 px-6 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/50"
+                  className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 px-6 rounded-xl transition-all shadow-lg hover:shadow-red-500/50"
                 >
                   {createRequest.isPending ? (
                     <>

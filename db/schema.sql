@@ -234,9 +234,10 @@ create policy "reviews_delete_own_or_admin" on reviews
   );
 
 -- Sample seed data (admin user should be created via Supabase auth console)
+-- Note: Use db/seed_books.sql for proper seeding with 5 real books
 insert into books (title, author, category, isbn, total_copies, available_copies)
 values
-('Sample Book Title', 'Jane Doe', 'General', 'ISBN-0000', 3, 3)
+('Sample Book Title', 'Jane Doe', 'General', 'ISBN-0000', 1, 1)
 on conflict do nothing;
 
 -- Helper function to check if current user is admin (bypasses RLS to avoid recursion)

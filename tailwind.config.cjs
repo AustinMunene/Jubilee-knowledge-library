@@ -9,9 +9,14 @@ module.exports = {
           900: '#0f172a',
           850: '#1e293b',
         },
+        jubilee: {
+          red: '#dc2626', // Primary Jubilee red (red-600)
+          'red-dark': '#b91c1c', // Darker red for hovers (red-700)
+          'red-light': '#ef4444', // Lighter red (red-500)
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Futura Bk BT', 'Futura', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       spacing: {
         sidebar: '280px',

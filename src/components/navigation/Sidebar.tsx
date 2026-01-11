@@ -35,7 +35,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
         {/* Logo */}
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-indigo-500" />
+            <BookOpen className="w-6 h-6 text-red-600" />
             <span>Jubilee</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">Knowledge Library</p>
@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
                 to={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-red-600 text-white'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
@@ -69,7 +69,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
             to="/app/settings"
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
               isActive('/app/settings')
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-red-600 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { BookOpen, Loader, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '../../app/providers/AuthProvider'
+import Footer from '../../components/Footer'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -175,16 +176,17 @@ export default function LoginPage() {
   const strength = passwordStrength()
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-12 flex-col justify-between relative overflow-hidden">
+    <div className="min-h-screen flex flex-col">
+      <div className="flex flex-1">
+        {/* Left Side - Branding */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-12 flex-col justify-between relative overflow-hidden">
         {/* Decorative gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-orange-500/5 to-teal-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-red-500/5 to-red-500/10" />
         
         <div className="relative z-10">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
               <BookOpen className="w-7 h-7 text-white" />
             </div>
             <div>
@@ -197,7 +199,7 @@ export default function LoginPage() {
     <div className="space-y-6">
             <h2 className="text-5xl font-bold text-white leading-tight">
               Discover the joy of{' '}
-              <span className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
                 learning
               </span>
             </h2>
@@ -210,9 +212,9 @@ export default function LoginPage() {
 
         {/* Decorative lines */}
         <div className="relative z-10 flex gap-2">
-          <div className="w-12 h-1 bg-teal-500 rounded-full" />
-          <div className="w-12 h-1 bg-orange-500 rounded-full" />
-          <div className="w-12 h-1 bg-teal-500 rounded-full" />
+          <div className="w-12 h-1 bg-red-600 rounded-full" />
+          <div className="w-12 h-1 bg-red-500 rounded-full" />
+          <div className="w-12 h-1 bg-red-600 rounded-full" />
         </div>
       </div>
 
@@ -221,7 +223,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 justify-center mb-8">
-            <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -265,8 +267,8 @@ export default function LoginPage() {
                   className={`w-full px-4 py-3 rounded-lg bg-slate-900 border ${
                     validationErrors.name
                       ? 'border-red-500'
-                      : 'border-slate-700 focus:border-teal-500'
-                  } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-colors`}
+                      : 'border-slate-700 focus:border-red-500'
+                  } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors`}
                   required
                 />
                 {validationErrors.name && (
@@ -292,8 +294,8 @@ export default function LoginPage() {
                 className={`w-full px-4 py-3 rounded-lg bg-slate-900 border ${
                   validationErrors.email
                     ? 'border-red-500'
-                    : 'border-slate-700 focus:border-teal-500'
-                } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-colors`}
+                    : 'border-slate-700 focus:border-red-500'
+                } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors`}
             required
           />
               {validationErrors.email && (
@@ -319,8 +321,8 @@ export default function LoginPage() {
                   className={`w-full px-4 py-3 rounded-lg bg-slate-900 border ${
                     validationErrors.username
                       ? 'border-red-500'
-                      : 'border-slate-700 focus:border-teal-500'
-                  } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-colors`}
+                      : 'border-slate-700 focus:border-red-500'
+                  } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors`}
                   required
                 />
                 {validationErrors.username && (
@@ -348,8 +350,8 @@ export default function LoginPage() {
                   className={`w-full px-4 py-3 pr-12 rounded-lg bg-slate-900 border ${
                     validationErrors.password
                       ? 'border-red-500'
-                      : 'border-slate-700 focus:border-teal-500'
-                  } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-colors`}
+                      : 'border-slate-700 focus:border-red-500'
+                  } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-colors`}
             required
           />
                 <button
@@ -412,7 +414,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading && <Loader className="w-4 h-4 animate-spin" />}
               {loading
@@ -437,7 +439,7 @@ export default function LoginPage() {
                   setValidationErrors({})
                   setPassword('')
                 }}
-                className="text-teal-400 hover:text-teal-300 font-medium transition-colors"
+                className="text-red-400 hover:text-red-300 font-medium transition-colors"
               >
                 {mode === 'signin' ? 'Sign up' : 'Sign in'}
               </button>
@@ -445,6 +447,9 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      </div>
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

@@ -56,7 +56,7 @@ export default function AdminApprovalPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
                     {/* User Avatar */}
-                    <div className="w-12 h-12 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-medium">
+                    <div className="w-12 h-12 rounded-lg bg-red-600 flex items-center justify-center text-white font-medium">
                       {user?.profile_photo_url ? (
                         <img
                           src={user.profile_photo_url}

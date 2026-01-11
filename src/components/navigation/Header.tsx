@@ -22,7 +22,7 @@ export default function Header({ onSidebarToggle }: HeaderProps) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-400 focus-within:text-white focus-within:border-indigo-500 transition-colors max-w-xs">
+        <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-700 text-slate-400 focus-within:text-white focus-within:border-red-500 transition-colors max-w-xs">
           <Search className="w-4 h-4" />
           <input
             type="text"
@@ -51,7 +51,7 @@ export default function Header({ onSidebarToggle }: HeaderProps) {
                 className="w-8 h-8 rounded-lg object-cover"
               />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
+              <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white text-sm font-medium">
                 {user?.name?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
               </div>
             )}

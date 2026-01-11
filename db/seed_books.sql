@@ -25,8 +25,8 @@ SELECT
   'Aswath Damodaran',
   'Finance',
   'A comprehensive guide to valuation that bridges the gap between storytelling and numbers. Learn how to value companies by combining narrative elements with quantitative analysis, making investment decisions more informed and strategic.',
-  3,
-  3,
+  1,
+  1,
   NULL
 WHERE NOT EXISTS (
   SELECT 1 FROM books WHERE title = 'Narrative and Numbers' AND author = 'Aswath Damodaran'
@@ -39,8 +39,8 @@ SELECT
   'Bruce Greenwald',
   'Finance',
   'An authoritative exploration of value investing principles from Benjamin Graham to Warren Buffett. This second edition provides updated insights and practical frameworks for identifying undervalued securities and building long-term wealth.',
-  3,
-  3,
+  1,
+  1,
   NULL
 WHERE NOT EXISTS (
   SELECT 1 FROM books WHERE title = 'Value Investing: From Graham to Buffett and Beyond (2nd Ed.)' AND author = 'Bruce Greenwald'
@@ -53,8 +53,8 @@ SELECT
   'Burton Malkiel',
   'Finance',
   'A classic investment guide that explains why a diversified portfolio of index funds is the most reliable path to long-term wealth. Malkiel debunks market timing and stock picking myths while providing evidence-based strategies for individual investors.',
-  3,
-  3,
+  1,
+  1,
   NULL
 WHERE NOT EXISTS (
   SELECT 1 FROM books WHERE title = 'A Random Walk Down Wall Street: The Time-Tested Strategy for Successful Investing' AND author = 'Burton Malkiel'
@@ -67,8 +67,8 @@ SELECT
   'Frank J. Fabozzi',
   'Finance',
   'The definitive reference for fixed income markets, covering bonds, derivatives, and structured products. Essential reading for finance professionals seeking to understand debt instruments, yield curves, and portfolio management strategies.',
-  3,
-  3,
+  1,
+  1,
   NULL
 WHERE NOT EXISTS (
   SELECT 1 FROM books WHERE title = 'The Handbook of Fixed Income Securities' AND author = 'Frank J. Fabozzi'
@@ -81,8 +81,8 @@ SELECT
   'Ilya Strebulaev and Alex Dang',
   'Business',
   'A practical guide to thinking like a venture capitalist, whether you''re an entrepreneur, investor, or corporate leader. Learn how to evaluate opportunities, make bold decisions, and build high-growth businesses using VC principles.',
-  3,
-  3,
+  1,
+  1,
   NULL
 WHERE NOT EXISTS (
   SELECT 1 FROM books WHERE title = 'The Venture Mindset' AND author = 'Ilya Strebulaev and Alex Dang'

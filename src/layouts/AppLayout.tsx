@@ -3,6 +3,7 @@ import { useAuth } from '../app/providers/AuthProvider'
 import { useLocation } from 'react-router-dom'
 import Sidebar from '../components/navigation/Sidebar'
 import Header from '../components/navigation/Header'
+import Footer from '../components/Footer'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
@@ -28,6 +29,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   )

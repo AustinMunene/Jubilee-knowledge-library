@@ -54,7 +54,7 @@ export default function UserDashboard() {
         {stats.map((stat, idx) => {
           const Icon = stat.icon
           const colorClasses = {
-            indigo: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+            indigo: 'bg-red-600/10 border-red-500/20 text-red-400',
             emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
             red: 'bg-red-500/10 border-red-500/20 text-red-400',
           }[stat.color as keyof typeof colorClasses]
@@ -101,7 +101,7 @@ export default function UserDashboard() {
                 className={`p-4 rounded-lg border transition-all ${
                   isExpiringSoon
                     ? 'bg-amber-500/10 border-amber-500/20'
-                    : 'bg-slate-800 border-slate-700 hover:border-indigo-500'
+                    : 'bg-slate-800 border-slate-700 hover:border-red-500'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -122,7 +122,7 @@ export default function UserDashboard() {
                   </div>
                   {daysLeft > 0 && (
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-indigo-400">{daysLeft}</div>
+                      <div className="text-2xl font-bold text-red-400">{daysLeft}</div>
                       <div className="text-xs text-slate-400">days left</div>
                     </div>
                   )}
