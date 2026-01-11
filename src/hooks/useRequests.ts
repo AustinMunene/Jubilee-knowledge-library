@@ -1,5 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchUserRequests, fetchRequestsForAdmin, createRequest, updateRequestStatus } from '../services/requests'
+import { 
+  fetchUserRequests, 
+  fetchRequestsForAdmin, 
+  createRequest, 
+  approveRequest, 
+  rejectRequest,
+  cancelRequest
+} from '../services/requests'
 import { useAuth } from '../app/providers/AuthProvider'
 
 export function useUserRequests() {
@@ -24,18 +31,57 @@ export function useCreateRequest() {
     mutationFn: ({ user_id, book_id }: { user_id: string; book_id: string }) => createRequest(user_id, book_id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['requests'] })
+      qc.invalidateQueries({ queryKey: ['admin_requests'] })
       qc.invalidateQueries({ queryKey: ['books'] })
     }
   })
 }
 
-export function useUpdateRequestStatus() {
+export function useApproveRequest() {
   const qc = useQueryClient()
+  const { user } = useAuth()
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'approved' | 'rejected' }) => updateRequestStatus(id, status),
+    mutationFn: (requestId: string) => {
+      if (!user?.id) throw new Error('Not authenticated')
+      return approveRequest(requestId, user.id)
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin_requests'] })
       qc.invalidateQueries({ queryKey: ['requests'] })
+      qc.invalidateQueries({ queryKey: ['books'] })
+      qc.invalidateQueries({ queryKey: ['borrows'] })
+    }
+  })
+}
+
+export function useRejectRequest() {
+  const qc = useQueryClient()
+  const { user } = useAuth()
+  return useMutation({
+    mutationFn: ({ requestId, reason }: { requestId: string; reason?: string }) => {
+      if (!user?.id) throw new Error('Not authenticated')
+      return rejectRequest(requestId, user.id, reason)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin_requests'] })
+      qc.invalidateQueries({ queryKey: ['requests'] })
+      qc.invalidateQueries({ queryKey: ['books'] })
+    }
+  })
+}
+
+export function useCancelRequest() {
+  const qc = useQueryClient()
+  const { user } = useAuth()
+  return useMutation({
+    mutationFn: (requestId: string) => {
+      if (!user?.id) throw new Error('Not authenticated')
+      return cancelRequest(requestId, user.id)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['requests'] })
+      qc.invalidateQueries({ queryKey: ['admin_requests'] })
+      qc.invalidateQueries({ queryKey: ['books'] })
     }
   })
 }

@@ -1,18 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../services/supabaseClient'
+import { fetchUserBorrows, fetchAllBorrows } from '../services/borrow'
+import { useAuth } from '../app/providers/AuthProvider'
 
 export function useUserBorrows(userId?: string) {
+  const { user } = useAuth()
+  const targetUserId = userId || user?.id
+  
   return useQuery({
-    queryKey: ['borrows', userId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('borrow_records')
-        .select('*')
-        .eq('user_id', userId)
-        .order('issued_at', { ascending: false })
-    if (error) throw error
-    return data
-    },
-    enabled: !!userId,
+    queryKey: ['borrows', targetUserId],
+    queryFn: () => fetchUserBorrows(targetUserId!),
+    enabled: !!targetUserId,
+  })
+}
+
+export function useAllBorrows() {
+  return useQuery({
+    queryKey: ['admin_borrows'],
+    queryFn: fetchAllBorrows,
   })
 }

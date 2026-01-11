@@ -33,3 +33,55 @@ export interface AdminApprovalRequest {
   status: 'pending' | 'approved' | 'rejected'
   user?: User
 }
+
+export interface Request {
+  id: string
+  user_id: string
+  book_id: string
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  requested_at: string
+  approved_at?: string
+  rejected_at?: string
+  cancelled_at?: string
+  approved_by?: string
+  rejected_by?: string
+  rejection_reason?: string
+  profiles?: User
+  books?: Book
+}
+
+export interface BorrowRecord {
+  id: string
+  user_id: string
+  book_id: string
+  request_id?: string
+  issued_at: string
+  due_at?: string
+  returned_at?: string
+  status: 'active' | 'overdue' | 'returned'
+  profiles?: User
+  books?: Book
+  requests?: Request
+}
+
+export interface Review {
+  id: string
+  book_id: string
+  user_id: string
+  rating: number
+  comment?: string
+  created_at: string
+  profiles?: User
+  books?: Book
+}
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: 'request_created' | 'request_approved' | 'request_rejected' | 'return_recorded' | 'overdue_reminder'
+  title: string
+  message?: string
+  read: boolean
+  created_at: string
+  metadata?: Record<string, any>
+}

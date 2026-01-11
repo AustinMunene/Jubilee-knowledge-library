@@ -1,5 +1,5 @@
 import React from 'react'
-import { useAdminRequests, useUpdateRequestStatus } from '../../hooks/useRequests'
+import { useAdminRequests, useApproveRequest, useRejectRequest } from '../../hooks/useRequests'
 import { Loader, CheckCircle, XCircle, User, Mail } from 'lucide-react'
 import { Skeleton } from '../../components/Skeleton'
 import { EmptyState } from '../../components/EmptyState'
@@ -9,18 +9,25 @@ import { useToast } from '../../components/Toast'
 export default function AdminRequestsPage() {
   const { data: requests, isLoading, error } = useAdminRequests()
   const { data: books } = useBooks()
-  const updateMutation = useUpdateRequestStatus()
+  const approveMutation = useApproveRequest()
+  const rejectMutation = useRejectRequest()
   const { showToast } = useToast()
 
   const getBookTitle = (bookId: string) => {
+    // Check if request has book data joined
+    const request = requests?.find((r: any) => r.book_id === bookId)
+    if (request?.books) {
+      return (request.books as any).title
+    }
+    // Fallback to books query
     const book = books?.find(b => b.id === bookId)
     return book?.title || `Book ${bookId.slice(0, 8)}...`
   }
 
   const handleApprove = async (requestId: string) => {
-    if (confirm('Approve this book request?')) {
+    if (confirm('Approve this book request? This will create a borrow record and reduce available copies.')) {
       try {
-        await updateMutation.mutateAsync({ id: requestId, status: 'approved' })
+        await approveMutation.mutateAsync(requestId)
         showToast('Request approved successfully', 'success')
       } catch (err: any) {
         showToast(err.message || 'Failed to approve request', 'error')
@@ -29,9 +36,10 @@ export default function AdminRequestsPage() {
   }
 
   const handleReject = async (requestId: string) => {
-    if (confirm('Reject this book request?')) {
+    const reason = prompt('Optional: Enter a reason for rejection (or leave blank)')
+    if (reason !== null) { // User clicked OK (even if reason is empty)
       try {
-        await updateMutation.mutateAsync({ id: requestId, status: 'rejected' })
+        await rejectMutation.mutateAsync({ requestId, reason: reason || undefined })
         showToast('Request rejected', 'success')
       } catch (err: any) {
         showToast(err.message || 'Failed to reject request', 'error')
@@ -137,10 +145,10 @@ export default function AdminRequestsPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleApprove(request.id)}
-                      disabled={updateMutation.isPending}
+                      disabled={approveMutation.isPending || rejectMutation.isPending}
                       className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {updateMutation.isPending ? (
+                      {approveMutation.isPending ? (
                         <Loader className="w-4 h-4 animate-spin" />
                       ) : (
                         <CheckCircle className="w-4 h-4" />
@@ -149,10 +157,10 @@ export default function AdminRequestsPage() {
                     </button>
                     <button
                       onClick={() => handleReject(request.id)}
-                      disabled={updateMutation.isPending}
+                      disabled={approveMutation.isPending || rejectMutation.isPending}
                       className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {updateMutation.isPending ? (
+                      {rejectMutation.isPending ? (
                         <Loader className="w-4 h-4 animate-spin" />
                       ) : (
                         <XCircle className="w-4 h-4" />
