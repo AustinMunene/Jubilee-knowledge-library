@@ -16,7 +16,8 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-async function fetchUserProfile(userId: string): Promise<User | null> {
+// Retry logic for profile fetching with exponential backoff
+async function fetchUserProfile(userId: string, retryCount = 0, maxRetries = 3): Promise<User | null> {
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -26,14 +27,29 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
 
     if (error) {
       // PGRST116 = no rows returned (profile doesn't exist yet)
-      if (error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error.code, error.message)
+      if (error.code === 'PGRST116') {
+        return null
       }
+      
+      // Retry on network/timeout errors
+      if (retryCount < maxRetries && (error.code === '0' || error.message?.includes('timeout') || error.message?.includes('network'))) {
+        const delay = Math.pow(2, retryCount) * 100 // exponential backoff
+        await new Promise(resolve => setTimeout(resolve, delay))
+        return fetchUserProfile(userId, retryCount + 1, maxRetries)
+      }
+      
+      console.error('Error fetching profile:', error.code, error.message)
       return null
     }
 
     return data as User
   } catch (err: any) {
+    // Retry on network/timeout errors
+    if (retryCount < maxRetries && (err.message?.includes('timeout') || err.message?.includes('network') || err.message?.includes('fetch'))) {
+      const delay = Math.pow(2, retryCount) * 100 // exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delay))
+      return fetchUserProfile(userId, retryCount + 1, maxRetries)
+    }
     console.error('Exception fetching profile:', err)
     return null
   }
@@ -44,26 +60,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const queryClient = useQueryClient()
+  const [authStateLoaded, setAuthStateLoaded] = useState(false) // Track if auth state has been initialized
 
   const loadUserProfile = async (authUserId: string) => {
     try {
       const profile = await fetchUserProfile(authUserId)
       if (profile) {
         setUser(profile)
-        return
+        return true
       }
       
       // Fallback to basic user if profile doesn't exist yet
       // This can happen if a user was created but profile wasn't created
       const { data: authUser, error: authError } = await supabase.auth.getUser()
       if (authError) {
-        console.error('Error getting auth user:', authError.message)
+        console.warn('⚠️ Error getting auth user:', authError.message)
         // Still set a basic user to allow login to proceed
         setUser({
           id: authUserId,
           role: 'user',
         })
-        return
+        return true
       }
       
       if (authUser?.user) {
@@ -79,36 +96,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: 'user',
         })
       }
+      return true
     } catch (err: any) {
-      console.error('Failed to load user profile:', err?.message || err)
+      console.error('❌ Failed to load user profile:', err?.message || err)
       // Set a basic user to allow login to proceed even if profile fetch fails
       // This prevents login from hanging when profiles endpoint has issues
       setUser({
         id: authUserId,
         role: 'user',
       })
+      return true
     }
   }
 
   useEffect(() => {
     let mounted = true
     let loadingResolved = false
+    let initialCheckDone = false
 
     const resolveLoading = () => {
       if (mounted && !loadingResolved) {
         loadingResolved = true
+        setAuthStateLoaded(true)
         setLoading(false)
-        // Loading resolved
       }
     }
 
     // Set a safety timeout to ensure we never hang forever
     const safetyTimeout = setTimeout(() => {
       if (mounted && !loadingResolved) {
-        console.warn('Auth loading timeout - forcing resolution')
+        console.warn('⚠️ Auth loading timeout - forcing resolution')
         resolveLoading()
       }
-    }, 1500) // 1.5 second safety timeout
+    }, 3000) // 3 second safety timeout
 
     // Listen for auth state changes - this is the primary mechanism
     // It fires immediately with the current session
@@ -117,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
 
+      initialCheckDone = true
       setSession(session)
       
       if (session?.user) {
@@ -142,35 +163,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       resolveLoading()
     })
 
-    // Also check initial session as a backup (non-blocking)
-    // But don't wait for it - onAuthStateChange should fire first
-    supabase.auth.getSession()
-      .then(({ data: { session }, error }) => {
-        if (!mounted || loadingResolved) return
-        
-        if (error) {
-          console.warn('⚠️ Error getting session (non-critical):', error.message)
-          return
-        }
-        
-        // Only update if we haven't already resolved and session exists
-        if (session?.user) {
-          setSession(session)
-          // Load profile in background
-          loadUserProfile(session.user.id).catch((err) => {
-            console.error('❌ Error loading profile from getSession:', err)
-          })
-        }
-      })
-      .catch((err) => {
-        if (!mounted || loadingResolved) return
-        console.warn('⚠️ getSession promise error (non-critical):', err)
-      })
+    // Check initial session only if onAuthStateChange doesn't fire quickly enough
+    // Use a short delay to give onAuthStateChange a chance to fire first
+    const initialCheckTimeout = setTimeout(() => {
+      if (!mounted || initialCheckDone || loadingResolved) return
+      
+      supabase.auth.getSession()
+        .then(({ data: { session }, error }) => {
+          if (!mounted || loadingResolved || initialCheckDone) return
+          
+          if (error) {
+            console.warn('⚠️ Error getting session:', error.message)
+            resolveLoading()
+            return
+          }
+          
+          // Only update if onAuthStateChange hasn't fired yet
+          if (session?.user) {
+            setSession(session)
+            // Load profile in background
+            loadUserProfile(session.user.id).catch((err) => {
+              console.error('❌ Error loading profile from getSession:', err)
+            })
+          }
+          resolveLoading()
+        })
+        .catch((err) => {
+          if (!mounted || loadingResolved) return
+          console.warn('⚠️ getSession promise error:', err)
+          resolveLoading()
+        })
+    }, 500) // Give onAuthStateChange 500ms to fire
 
     return () => {
       mounted = false
       subscription.unsubscribe()
       clearTimeout(safetyTimeout)
+      clearTimeout(initialCheckTimeout)
     }
   }, [queryClient])
 
@@ -193,27 +222,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: new Error('Sign in failed: No session returned') }
       }
 
-      // Set session immediately - this will trigger onAuthStateChange
-      // which will handle profile loading asynchronously
+      if (!data.user) {
+        return { error: new Error('Sign in failed: No user data returned') }
+      }
+
+      // Set session immediately
       setSession(data.session)
       
       // Set a basic user immediately to allow login to proceed
-      // onAuthStateChange will update with full profile when it loads
-      if (data.user) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email || undefined,
-          role: 'user',
-        })
-        // Load profile in background - don't await to prevent blocking
-        loadUserProfile(data.user.id).catch((err) => {
-          console.warn('Profile load failed in signIn, onAuthStateChange will handle it:', err)
-        })
-      }
+      // Load profile in background - don't await to prevent blocking
+      setUser({
+        id: data.user.id,
+        email: data.user.email || undefined,
+        role: 'user',
+      })
+      
+      // Load full profile in background to get more details
+      loadUserProfile(data.user.id).catch((err) => {
+        console.warn('⚠️ Profile load failed in signIn (non-critical):', err)
+      })
 
       return {}
     } catch (err: any) {
-      console.error('Sign in exception:', err)
+      console.error('❌ Sign in exception:', err)
       return { error: new Error(err.message || 'Sign in failed') }
     }
   }
@@ -238,13 +269,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Step 2: Create profile (using the user ID from signup)
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: authData.user.id,
-        email,
-        username,
-        name: name || undefined,
-        role: 'user',
-      })
+      // Retry logic for profile creation in case of transient failures
+      let profileError = null
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const result = await supabase.from('profiles').insert({
+          id: authData.user.id,
+          email,
+          username,
+          name: name || undefined,
+          role: 'user',
+        })
+        
+        if (!result.error) {
+          profileError = null
+          break
+        }
+        
+        profileError = result.error
+        if (attempt < 3 && (result.error.code === '0' || result.error.message?.includes('timeout'))) {
+          // Retry on network/timeout errors
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 100))
+        } else {
+          break
+        }
+      }
 
       if (profileError) {
         // Handle duplicate username
@@ -258,24 +306,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Always try to sign in after successful signup to ensure we have a session
       if (authData.session) {
         // Session was returned immediately - use it
-        // The onAuthStateChange listener will also fire, but we set it explicitly here to ensure immediate state update
         setSession(authData.session)
-        // Load profile - it should exist since we just created it
-        // If it fails, the listener will handle fallback
-        try {
-          await loadUserProfile(authData.user.id)
-        } catch (err) {
-          console.warn('Profile load failed on initial signup, will retry via auth listener:', err)
-          // Continue anyway - onAuthStateChange will handle retry
-        }
+        
+        // Set basic user immediately
+        setUser({
+          id: authData.user.id,
+          email: authData.user.email || undefined,
+          role: 'user',
+        })
+        
+        // Load full profile in background
+        loadUserProfile(authData.user.id).catch((err) => {
+          console.warn('⚠️ Profile load failed on initial signup:', err)
+        })
+        
         return {}
       } else {
         // No session returned - explicitly sign in to get one
         // This handles cases where email confirmation is disabled but session still not returned
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
+        let signInError = null
+        let signInData = null
+        
+        // Retry sign-in on failure (with max 2 attempts)
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          const result = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
+          
+          signInError = result.error
+          signInData = result.data
+          
+          if (!signInError) {
+            break
+          }
+          
+          // Retry only on transient errors, not on auth errors
+          if (attempt < 2 && (signInError.message?.includes('timeout') || signInError.message?.includes('network'))) {
+            await new Promise(resolve => setTimeout(resolve, 500))
+          } else {
+            break
+          }
+        }
         
         if (signInError) {
           // Check if it's an email confirmation error
@@ -287,14 +359,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (signInData?.session) {
-          // Set session explicitly - onAuthStateChange will also fire
+          // Set session and basic user
           setSession(signInData.session)
-          try {
-            await loadUserProfile(signInData.user.id)
-          } catch (err) {
-            console.warn('Profile load failed after sign-in, will retry via auth listener:', err)
-            // Continue anyway - onAuthStateChange will handle retry
-          }
+          setUser({
+            id: signInData.user.id,
+            email: signInData.user.email || undefined,
+            role: 'user',
+          })
+          
+          // Load full profile in background
+          loadUserProfile(signInData.user.id).catch((err) => {
+            console.warn('⚠️ Profile load failed after sign-in:', err)
+          })
+          
           return {}
         }
         
@@ -302,7 +379,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: new Error('Account created but session could not be established. Please sign in manually.') }
       }
     } catch (err: any) {
-      console.error('Sign up exception:', err)
+      console.error('❌ Sign up exception:', err)
       return { error: new Error(err.message || 'Sign up failed') }
     }
   }
@@ -316,13 +393,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   async function signOut() {
     try {
-    await supabase.auth.signOut()
-    setUser(null)
+      await supabase.auth.signOut()
+      setUser(null)
       setSession(null)
       // Clear all query cache
       queryClient.clear()
-    } catch (err) {
-      console.error('Sign out error')
+    } catch (err: any) {
+      console.error('❌ Sign out error:', err.message)
+      // Still clear local state even if signOut fails
+      setUser(null)
+      setSession(null)
+      queryClient.clear()
     }
   }
 
